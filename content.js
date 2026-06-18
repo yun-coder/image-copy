@@ -25,7 +25,7 @@ panel.innerHTML = `
   <div class="pg-shell">
     <div class="pg-header">
       <div class="pg-title">
-        <strong>图透镜 Image Lens</strong>
+        <strong>图生灵</strong>
       </div>
       <div class="pg-header-actions">
         <button class="pg-icon-button" id="pg-open-options" type="button" aria-label="打开设置" title="打开设置">⚙</button>
@@ -202,7 +202,7 @@ function bindEvents() {
 function renderRatioSelect() {
   els.ratioSelect.innerHTML = RATIO_OPTIONS.map((ratio) => {
     const selected = ratio === state.panelData.aspectRatio ? " selected" : "";
-    return `<option value="${ratio}"${selected}>${ratio}</option>`;
+    return `<option value="${ratio}"${selected} style="background:#0d1526;color:#f8fbff">${ratio}</option>`;
   }).join("");
 }
 

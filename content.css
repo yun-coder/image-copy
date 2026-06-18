@@ -1,13 +1,19 @@
 :root {
-  --pg-glass-bg: rgba(9, 16, 31, 0.78);
-  --pg-glass-bg-soft: rgba(18, 28, 49, 0.64);
-  --pg-glass-stroke: rgba(255, 255, 255, 0.14);
-  --pg-glass-shadow: rgba(2, 6, 23, 0.62);
+  --pg-glass-bg: rgba(9, 16, 31, 0.82);
+  --pg-glass-bg-soft: rgba(16, 26, 47, 0.55);
+  --pg-glass-stroke: rgba(255, 255, 255, 0.12);
+  --pg-glass-shadow: rgba(2, 6, 23, 0.55);
   --pg-ink: #f8fbff;
   --pg-ink-soft: rgba(226, 236, 255, 0.68);
+  --pg-ink-muted: rgba(226, 236, 255, 0.40);
   --pg-accent: #6d7cff;
+  --pg-accent-glow: rgba(109, 124, 255, 0.22);
   --pg-accent-2: #2dd4ff;
   --pg-success: #6ee7b7;
+  --pg-danger: #fca5a5;
+  --radius-sm: 8px;
+  --radius-md: 14px;
+  --radius-lg: 20px;
 }
 
 #pg-panel,
@@ -15,20 +21,17 @@
   box-sizing: border-box;
 }
 
+/* ======================== Hover Trigger ======================== */
+
 #pg-hover-trigger {
   position: fixed;
   z-index: 2147483643;
-  width: 34px;
-  height: 34px;
-  border: 1px solid rgba(255, 255, 255, 0.18);
+  width: 36px;
+  height: 36px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
   border-radius: 999px;
-  background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.18), rgba(255, 255, 255, 0.05)),
-    radial-gradient(circle at 25% 20%, rgba(255, 255, 255, 0.35), transparent 38%),
-    rgba(10, 18, 35, 0.78);
-  box-shadow:
-    0 12px 30px rgba(2, 6, 23, 0.48),
-    inset 0 1px 0 rgba(255, 255, 255, 0.24);
+  background: linear-gradient(160deg, rgba(109, 124, 255, 0.35), rgba(45, 212, 255, 0.25)), rgba(10, 18, 35, 0.85);
+  box-shadow: 0 8px 28px rgba(2, 6, 23, 0.50), 0 0 0 1px rgba(255, 255, 255, 0.06);
   backdrop-filter: blur(18px) saturate(1.4);
   -webkit-backdrop-filter: blur(18px) saturate(1.4);
   color: var(--pg-ink);
@@ -36,6 +39,16 @@
   display: none;
   align-items: center;
   justify-content: center;
+  transition: transform 0.15s ease, box-shadow 0.2s ease;
+}
+
+#pg-hover-trigger:hover {
+  transform: scale(1.08);
+  box-shadow: 0 10px 36px rgba(109, 124, 255, 0.30), 0 0 0 1px rgba(255, 255, 255, 0.10);
+}
+
+#pg-hover-trigger:active {
+  transform: scale(0.95);
 }
 
 #pg-hover-trigger::before {
@@ -44,42 +57,67 @@
   line-height: 1;
 }
 
+/* ======================== Panel ======================== */
+
 #pg-panel {
   position: fixed;
   top: 24px;
   right: 24px;
   z-index: 2147483644;
-  width: min(470px, calc(100vw - 28px));
+  width: min(460px, calc(100vw - 28px));
   max-height: calc(100vh - 48px);
   color: var(--pg-ink);
   display: none;
   overflow: hidden;
-  border-radius: 28px;
+  border-radius: var(--radius-lg);
   border: 1px solid var(--pg-glass-stroke);
   background:
-    radial-gradient(circle at top left, rgba(45, 212, 255, 0.12), transparent 32%),
-    linear-gradient(180deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.04)),
+    radial-gradient(circle at 10% 0%, rgba(45, 212, 255, 0.08) 0%, transparent 40%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.10), rgba(255, 255, 255, 0.03)),
     var(--pg-glass-bg);
   box-shadow:
-    0 22px 70px var(--pg-glass-shadow),
-    inset 0 1px 0 rgba(255, 255, 255, 0.16);
-  backdrop-filter: blur(30px) saturate(1.45);
-  -webkit-backdrop-filter: blur(30px) saturate(1.45);
+    0 24px 80px var(--pg-glass-shadow),
+    inset 0 1px 0 rgba(255, 255, 255, 0.14);
+  backdrop-filter: blur(32px) saturate(1.4);
+  -webkit-backdrop-filter: blur(32px) saturate(1.4);
 }
 
 #pg-panel.pg-open {
   display: block;
 }
 
+/* ======================== Scroll Container ======================== */
+
 .pg-shell {
   display: grid;
   gap: 14px;
-  padding: 18px;
+  padding: 16px;
   max-height: calc(100vh - 48px);
   width: 100%;
   overflow-y: auto;
   overflow-x: hidden;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.12) transparent;
 }
+
+.pg-shell::-webkit-scrollbar {
+  width: 6px;
+}
+
+.pg-shell::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.pg-shell::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: 999px;
+}
+
+.pg-shell::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.24);
+}
+
+/* ======================== Header Row ======================== */
 
 .pg-header,
 .pg-row,
@@ -101,80 +139,99 @@
   gap: 8px;
 }
 
+/* ======================== Title Area ======================== */
+
 .pg-title {
   display: flex;
   flex-direction: column;
   gap: 2px;
 }
 
-.pg-title strong,
-.pg-section-head strong {
-  font-size: 16px;
+.pg-title strong {
+  font-size: 15px;
+  font-weight: 600;
 }
 
-.pg-title span,
-.pg-meta,
-.pg-select-wrap span {
-  font-size: 12px;
-  color: var(--pg-ink-soft);
+.pg-title span {
+  font-size: 11px;
+  color: var(--pg-ink-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 280px;
 }
+
+/* ======================== Buttons & Chips ======================== */
 
 .pg-close,
 .pg-chip,
 .pg-action,
 .pg-select,
 .pg-icon-button {
-  border: 1px solid rgba(255, 255, 255, 0.14);
-  background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.04)),
-    rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.06);
   color: var(--pg-ink);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.18);
-  backdrop-filter: blur(14px) saturate(1.35);
-  -webkit-backdrop-filter: blur(14px) saturate(1.35);
-  font: 600 13px/1 -apple-system, BlinkMacSystemFont, "SF Pro Display", "PingFang SC", sans-serif;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.10);
+  font: 600 12px/1 -apple-system, BlinkMacSystemFont, "PingFang SC", sans-serif;
+  transition: border-color 0.2s ease, background 0.2s ease, transform 0.1s ease;
+}
+
+.pg-close:hover,
+.pg-chip:hover,
+.pg-action:hover {
+  border-color: rgba(255, 255, 255, 0.22);
+  background: rgba(255, 255, 255, 0.10);
+}
+
+.pg-close:active,
+.pg-chip:active,
+.pg-action:active {
+  transform: scale(0.96);
 }
 
 .pg-close,
 .pg-chip {
-  min-height: 34px;
+  min-height: 32px;
   padding: 0 12px;
   border-radius: 999px;
   cursor: pointer;
 }
 
 .pg-icon-button {
-  width: 34px;
-  height: 34px;
+  width: 32px;
+  height: 32px;
   padding: 0;
   border-radius: 999px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
+  font-size: 14px;
 }
 
 .pg-chip-group {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: 6px;
 }
 
 .pg-chip.is-active {
-  background:
-    linear-gradient(180deg, rgba(99, 102, 241, 0.82), rgba(14, 165, 233, 0.76)),
-    rgba(79, 70, 229, 0.24);
-  color: white;
+  background: linear-gradient(135deg, var(--pg-accent), #38bdf8);
+  border-color: transparent;
+  color: #fff;
+  box-shadow: 0 2px 12px var(--pg-accent-glow);
 }
 
+/* ======================== Preview Thumbnail ======================== */
+
 .pg-preview {
-  width: 62px;
-  height: 62px;
-  border-radius: 20px;
+  width: 60px;
+  height: 60px;
+  border-radius: var(--radius-md);
   overflow: hidden;
   flex: 0 0 auto;
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .pg-preview img {
@@ -184,12 +241,14 @@
   display: block;
 }
 
+/* ======================== Sections ======================== */
+
 .pg-section {
   display: grid;
   gap: 12px;
   width: 100%;
   padding-top: 14px;
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
 }
 
 .pg-hidden {
@@ -201,33 +260,40 @@
   padding-top: 0;
 }
 
+/* ======================== Textarea ======================== */
+
 .pg-textarea {
   width: 100%;
   max-width: 100%;
-  min-height: 190px;
+  min-height: 180px;
   resize: vertical;
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  border-radius: 22px;
-  padding: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  border-radius: var(--radius-md);
+  padding: 14px;
   color: var(--pg-ink);
-  background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.02)),
-    var(--pg-glass-bg-soft);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12);
-  backdrop-filter: blur(16px) saturate(1.35);
-  -webkit-backdrop-filter: blur(16px) saturate(1.35);
-  font: 500 13px/1.68 -apple-system, BlinkMacSystemFont, "SF Pro Display", "PingFang SC", sans-serif;
+  background: var(--pg-glass-bg-soft);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  font: 500 13px/1.70 -apple-system, BlinkMacSystemFont, "PingFang SC", sans-serif;
+  outline: none;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.pg-textarea:focus {
+  border-color: var(--pg-accent);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06), 0 0 0 3px var(--pg-accent-glow);
 }
 
 .pg-textarea::placeholder {
-  color: rgba(226, 236, 255, 0.45);
+  color: var(--pg-ink-muted);
 }
+
+/* ======================== Structure View ======================== */
 
 .pg-structure {
   display: grid;
   gap: 10px;
   padding-top: 12px;
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
 }
 
 .pg-structure-grid {
@@ -237,14 +303,17 @@
 
 .pg-structure-row {
   display: grid;
-  grid-template-columns: 52px 1fr;
-  gap: 12px;
+  grid-template-columns: 50px 1fr;
+  gap: 10px;
   align-items: start;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: var(--radius-sm);
+  padding: 8px 10px;
 }
 
 .pg-structure-label {
   color: var(--pg-accent-2);
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 700;
   line-height: 1.55;
 }
@@ -257,77 +326,99 @@
   word-break: break-word;
 }
 
+/* ======================== Meta Row ======================== */
+
 .pg-meta {
   display: flex;
   justify-content: space-between;
   gap: 12px;
+  font-size: 11px;
+  color: var(--pg-ink-muted);
 }
+
+/* ======================== Action Buttons ======================== */
 
 .pg-actions {
   flex-wrap: wrap;
 }
 
 .pg-actions-fixed {
-  gap: 12px;
+  gap: 10px;
 }
 
 .pg-action {
-  min-height: 40px;
+  min-height: 38px;
   padding: 0 14px;
-  border-radius: 16px;
+  border-radius: var(--radius-md);
   cursor: pointer;
 }
 
+/* ======================== Generate Section Controls ======================== */
+
 .pg-select-wrap {
   display: grid;
-  gap: 8px;
+  gap: 6px;
+}
+
+.pg-select-wrap span {
+  font-size: 11px;
+  color: var(--pg-ink-muted);
 }
 
 .pg-generate-row {
   display: flex;
   align-items: end;
-  gap: 12px;
+  gap: 10px;
   flex-wrap: wrap;
 }
 
 .pg-fixed-control-wrap {
-  width: 128px;
+  width: 130px;
 }
 
 .pg-select {
-  min-height: 42px;
-  padding: 0 14px;
-  border-radius: 16px;
+  min-height: 38px;
+  padding: 0 12px;
+  border-radius: var(--radius-md);
   outline: none;
   appearance: none;
   -webkit-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 10 10'%3E%3Cpath fill='rgba(226,236,255,0.4)' d='M5 7L1 3h8z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  padding-right: 32px;
+  cursor: pointer;
 }
 
 .pg-fixed-control {
-  width: 128px;
+  width: 130px;
   justify-content: center;
   text-align: center;
 }
 
+/* ======================== Busy State ======================== */
+
 .pg-action.is-busy,
 .pg-chip.is-busy {
   position: relative;
-  border-color: rgba(45, 212, 255, 0.24);
+  border-color: rgba(45, 212, 255, 0.20);
 }
 
 .pg-action.is-busy::after,
 .pg-chip.is-busy::after {
   content: "";
-  width: 12px;
-  height: 12px;
+  width: 11px;
+  height: 11px;
   margin-left: 8px;
-  border: 2px solid rgba(255, 255, 255, 0.2);
+  border: 2px solid rgba(255, 255, 255, 0.18);
   border-top-color: var(--pg-ink);
   border-radius: 999px;
   display: inline-block;
   vertical-align: -2px;
-  animation: pg-spin 0.85s linear infinite;
+  animation: pg-spin 0.8s linear infinite;
 }
+
+/* ======================== Status Colors ======================== */
 
 #pg-status[data-tone="working"] {
   color: var(--pg-accent-2);
@@ -338,8 +429,10 @@
 }
 
 #pg-status[data-tone="error"] {
-  color: #ffb4b4;
+  color: var(--pg-danger);
 }
+
+/* ======================== Inline Preview ======================== */
 
 .pg-inline-preview {
   display: none;
@@ -354,19 +447,13 @@
   gap: 12px;
 }
 
-.pg-credit {
-  margin: 2px 0 0;
-  font-size: 11px;
-  line-height: 1.4;
-  color: rgba(226, 236, 255, 0.46);
-  text-align: right;
-}
+/* ======================== Preview Cards ======================== */
 
 .pg-preview-card {
   overflow: hidden;
-  border-radius: 22px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  background: rgba(255, 255, 255, 0.03);
+  border-radius: var(--radius-md);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  background: rgba(255, 255, 255, 0.02);
 }
 
 .pg-preview-frame {
@@ -377,9 +464,9 @@
   display: block;
   width: 100%;
   height: auto;
-  max-height: 62vh;
+  max-height: 56vh;
   object-fit: contain;
-  background: rgba(3, 7, 18, 0.3);
+  background: rgba(3, 7, 18, 0.25);
 }
 
 .pg-preview-overlay {
@@ -388,8 +475,8 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 12px;
-  background: rgba(2, 6, 23, 0.52);
+  gap: 10px;
+  background: rgba(2, 6, 23, 0.55);
   opacity: 0;
   transition: opacity 0.2s ease;
 }
@@ -403,23 +490,34 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-height: 38px;
+  min-height: 36px;
   padding: 0 14px;
   border-radius: 999px;
-  border: 1px solid rgba(255, 255, 255, 0.16);
-  background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.16), rgba(255, 255, 255, 0.06)),
-    rgba(8, 15, 28, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.10);
   color: white;
   font-size: 12px;
   cursor: pointer;
+  transition: background 0.2s ease, transform 0.1s ease;
 }
+
+.pg-preview-action:hover {
+  background: rgba(255, 255, 255, 0.16);
+}
+
+.pg-preview-action:active {
+  transform: scale(0.96);
+}
+
+/* ======================== Animations ======================== */
 
 @keyframes pg-spin {
   to {
     transform: rotate(360deg);
   }
 }
+
+/* ======================== Responsive ======================== */
 
 @media (max-width: 720px) {
   #pg-panel {
@@ -429,10 +527,11 @@
     left: 10px;
     width: auto;
     max-height: calc(100vh - 20px);
+    border-radius: var(--radius-lg);
   }
 
   .pg-shell {
-    padding: 14px;
+    padding: 12px;
   }
 
   .pg-header,

@@ -1,12 +1,8 @@
 const form = document.getElementById("settings-form");
 const statusEl = document.getElementById("status");
 const docButton = document.getElementById("open-doc");
-const promptProviderField = document.querySelector('[name="promptProvider"]');
-const imageProviderField = document.querySelector('[name="imageProvider"]');
 const imageGenerationEnabledField = document.querySelector('[name="imageGenerationEnabled"]');
 const imageSettingsGroup = document.getElementById("image-settings-group");
-const promptModelHelp = document.getElementById("prompt-model-help");
-const imageModelHelp = document.getElementById("image-model-help");
 const promptBaseUrlHelp = document.getElementById("prompt-base-url-help");
 const imageBaseUrlHelp = document.getElementById("image-base-url-help");
 
@@ -52,8 +48,8 @@ form.addEventListener("submit", async (event) => {
   updateImageDraftFromForm();
 
   const payload = {
-    promptProvider: promptProviderField?.value || "gemini",
-    imageProvider: imageProviderField?.value || "gemini",
+    promptProvider: currentSettings?.promptProvider || "gemini",
+    imageProvider: currentSettings?.imageProvider || "gemini",
     apiMode: "direct",
     promptApiKey: getField("promptApiKey")?.value || "",
     promptModel: getField("promptModel")?.value || "",
@@ -82,11 +78,9 @@ form.addEventListener("submit", async (event) => {
 });
 
 imageGenerationEnabledField?.addEventListener("change", syncImageSettingsVisibility);
-promptProviderField?.addEventListener("change", handlePromptProviderChange);
-imageProviderField?.addEventListener("change", handleImageProviderChange);
 
 docButton.addEventListener("click", () => {
-  const provider = promptProviderField?.value || "gemini";
+  const provider = currentSettings?.promptProvider || "gemini";
   const url = PROVIDER_DOCS[provider] || PROVIDER_DOCS.gemini;
   if (chrome?.tabs?.create) {
     chrome.tabs.create({ url });
@@ -96,13 +90,6 @@ docButton.addEventListener("click", () => {
 });
 
 function hydrateForm(settings) {
-  if (promptProviderField) {
-    promptProviderField.value = settings.promptProvider || "gemini";
-  }
-  if (imageProviderField) {
-    imageProviderField.value = settings.imageProvider || "gemini";
-  }
-
   hydratePromptFields(
     settings.promptProvider || "gemini",
     settings.promptProviderProfiles?.[settings.promptProvider || "gemini"] || {
@@ -121,28 +108,6 @@ function hydrateForm(settings) {
       imageGenerationEnabled: settings.imageGenerationEnabled
     }
   );
-}
-
-function handlePromptProviderChange() {
-  const previousProvider = currentSettings?.promptProvider || "gemini";
-  updatePromptDraftFromForm(previousProvider);
-  const provider = promptProviderField?.value || "gemini";
-  currentSettings = {
-    ...(currentSettings || {}),
-    promptProvider: provider
-  };
-  hydratePromptFields(provider, promptProfileDrafts[provider] || {});
-}
-
-function handleImageProviderChange() {
-  const previousProvider = currentSettings?.imageProvider || "gemini";
-  updateImageDraftFromForm(previousProvider);
-  const provider = imageProviderField?.value || "gemini";
-  currentSettings = {
-    ...(currentSettings || {}),
-    imageProvider: provider
-  };
-  hydrateImageFields(provider, imageProfileDrafts[provider] || {});
 }
 
 function hydratePromptFields(provider, source) {
@@ -167,7 +132,7 @@ function hydrateImageFields(provider, source) {
   syncImageProviderUI(provider);
 }
 
-function updatePromptDraftFromForm(provider = promptProviderField?.value || "gemini") {
+function updatePromptDraftFromForm(provider = currentSettings?.promptProvider || "gemini") {
   promptProfileDrafts[provider] = normalizePromptProfile(provider, {
     apiKey: getField("promptApiKey")?.value || "",
     model: getField("promptModel")?.value || "",
@@ -176,7 +141,7 @@ function updatePromptDraftFromForm(provider = promptProviderField?.value || "gem
   });
 }
 
-function updateImageDraftFromForm(provider = imageProviderField?.value || "gemini") {
+function updateImageDraftFromForm(provider = currentSettings?.imageProvider || "gemini") {
   imageProfileDrafts[provider] = normalizeImageProfile(provider, {
     imageGenerationEnabled: getField("imageGenerationEnabled")?.checked || false,
     apiKey: getField("imageApiKey")?.value || "",
@@ -199,11 +164,6 @@ function syncPromptProviderUI(provider) {
       ? "https://api.openai.com/v1"
       : "https://generativelanguage.googleapis.com/v1beta";
   }
-  if (promptModelHelp) {
-    promptModelHelp.textContent = isOpenAICompatible
-      ? "OpenAI 兼容识图默认可先用 gpt-5.5。"
-      : "Gemini 例如 gemini-3.1-pro-preview。";
-  }
   if (promptBaseUrlHelp) {
     promptBaseUrlHelp.textContent = isOpenAICompatible
       ? "OpenAI Compatible 默认带入 https://api.openai.com/v1，也可以改成其他兼容网关。"
@@ -224,11 +184,6 @@ function syncImageProviderUI(provider) {
     imageBaseUrlField.placeholder = isOpenAICompatible
       ? "https://api.openai.com/v1"
       : "https://generativelanguage.googleapis.com/v1beta";
-  }
-  if (imageModelHelp) {
-    imageModelHelp.textContent = isOpenAICompatible
-      ? "OpenAI 兼容生图默认可先用 gpt-image-2；不同兼容平台支持度可能不同。"
-      : "Gemini 例如 gemini-3.1-flash-image-preview；不同账号、地区或套餐的可用模型可能不同。";
   }
   if (imageBaseUrlHelp) {
     imageBaseUrlHelp.textContent = isOpenAICompatible
@@ -336,7 +291,7 @@ function setStandaloneMode() {
   for (const field of form.querySelectorAll("input, select, button[type='submit']")) {
     field.disabled = true;
   }
-  statusEl.textContent = "当前页面是本地预览。请到 chrome://extensions 打开“图透镜 Image Lens Preview”的扩展设置页进行配置。";
+  statusEl.textContent = "当前页面是本地预览。请到 chrome://extensions 打开“图生灵 Preview”的扩展设置页进行配置。";
 }
 
 async function sendMessage(message) {

@@ -1,10 +1,20 @@
 :root {
   --text: #e5eefc;
   --text-soft: rgba(229, 238, 252, 0.72);
+  --text-muted: rgba(229, 238, 252, 0.42);
+  --accent: #5b7cff;
+  --accent-glow: rgba(91, 124, 255, 0.22);
+  --glass-stroke: rgba(255, 255, 255, 0.16);
+  --radius-md: 16px;
+  --radius-lg: 24px;
 }
 
 * {
   box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
 }
 
 body {
@@ -13,62 +23,114 @@ body {
   font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "PingFang SC", sans-serif;
   color: var(--text);
   background:
-    radial-gradient(circle at top left, rgba(59, 130, 246, 0.22), transparent 28%),
-    radial-gradient(circle at bottom right, rgba(14, 165, 233, 0.18), transparent 22%),
-    linear-gradient(160deg, #09111f, #101828 48%, #15233c);
+    radial-gradient(ellipse at 30% 0%, rgba(91, 124, 255, 0.12) 0%, transparent 45%),
+    radial-gradient(ellipse at 75% 90%, rgba(45, 212, 255, 0.08) 0%, transparent 40%),
+    linear-gradient(160deg, #070d1a, #0f1a2e 50%, #132040);
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.12) transparent;
 }
+
+body::-webkit-scrollbar {
+  width: 8px;
+}
+
+body::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+body::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: 999px;
+}
+
+body::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.24);
+}
+
+/* ========== Page ========== */
 
 .page {
-  width: min(1200px, calc(100vw - 28px));
+  width: min(960px, calc(100vw - 32px));
   margin: 0 auto;
-  padding: 24px 0 42px;
+  padding: 32px 0 48px;
 }
 
+/* ========== Glass Card ========== */
+
 .glass {
-  border: 1px solid rgba(255, 255, 255, 0.18);
-  border-radius: 28px;
+  border: 1px solid var(--glass-stroke);
+  border-radius: var(--radius-lg);
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.16), rgba(255, 255, 255, 0.06)),
-    rgba(255, 255, 255, 0.04);
+    radial-gradient(circle at 10% 0%, rgba(45, 212, 255, 0.06) 0%, transparent 40%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.04)),
+    rgba(255, 255, 255, 0.03);
   box-shadow:
-    0 24px 90px rgba(2, 6, 23, 0.42),
-    inset 0 1px 0 rgba(255, 255, 255, 0.28);
-  backdrop-filter: blur(22px) saturate(1.35);
-  -webkit-backdrop-filter: blur(22px) saturate(1.35);
+    0 24px 80px rgba(2, 6, 23, 0.38),
+    inset 0 1px 0 rgba(255, 255, 255, 0.20);
+  backdrop-filter: blur(28px) saturate(1.35);
+  -webkit-backdrop-filter: blur(28px) saturate(1.35);
 }
+
+/* ========== Hero Section ========== */
 
 .hero {
   display: grid;
   grid-template-columns: 1fr auto;
   gap: 18px;
   padding: 22px;
-  align-items: end;
+  align-items: start;
+}
+
+.hero-copy {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
 }
 
 .eyebrow {
-  margin: 0 0 8px;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-  font-size: 11px;
-  color: var(--text-soft);
-}
-
-h1,
-.prompt {
   margin: 0;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--accent-2);
 }
 
 h1 {
-  font-size: 20px;
+  margin: 0;
+  font-size: 18px;
   font-weight: 600;
 }
 
 .prompt {
-  margin-top: 10px;
+  margin: 0;
   line-height: 1.8;
   color: var(--text-soft);
   white-space: pre-wrap;
+  max-height: 220px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.10) transparent;
 }
+
+.prompt::-webkit-scrollbar {
+  width: 4px;
+}
+
+.prompt::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.prompt::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.10);
+  border-radius: 999px;
+}
+
+.prompt::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.22);
+}
+
+/* ========== Hero Actions ========== */
 
 .hero-actions {
   display: flex;
@@ -77,26 +139,49 @@ h1 {
 }
 
 .hero-actions button {
-  min-height: 42px;
+  min-height: 40px;
   padding: 0 16px;
   border-radius: 999px;
-  border: 1px solid rgba(255, 255, 255, 0.18);
-  background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.18), rgba(255, 255, 255, 0.06)),
-    rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.06);
   color: white;
+  font: 600 13px/1 -apple-system, BlinkMacSystemFont, "PingFang SC", sans-serif;
   cursor: pointer;
+  transition: border-color 0.2s ease, background 0.2s ease, transform 0.1s ease;
 }
+
+.hero-actions button:hover {
+  border-color: rgba(255, 255, 255, 0.24);
+  background: rgba(255, 255, 255, 0.10);
+}
+
+.hero-actions button:active {
+  transform: scale(0.96);
+}
+
+/* ========== Gallery ========== */
 
 .gallery {
   margin-top: 18px;
   display: grid;
-  gap: 18px;
+  grid-template-columns: repeat(auto-fill, minmax(min(300px, 100%), 1fr));
+  gap: 16px;
 }
+
+/* ========== Image Card ========== */
 
 .card {
   overflow: hidden;
-  padding: 10px;
+  border-radius: var(--radius-md);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.02);
+  padding: 8px;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 40px rgba(2, 6, 23, 0.35);
 }
 
 .card img {
@@ -104,13 +189,29 @@ h1 {
   width: 100%;
   height: auto;
   object-fit: contain;
-  border-radius: 18px;
-  background: rgba(3, 7, 18, 0.2);
+  border-radius: var(--radius-md);
+  background: rgba(3, 7, 18, 0.25);
 }
+
+/* ========== Responsive ========== */
 
 @media (max-width: 860px) {
   .hero {
     grid-template-columns: 1fr;
     align-items: start;
+  }
+}
+
+@media (max-width: 520px) {
+  .page {
+    padding: 20px 0 36px;
+  }
+
+  .hero {
+    padding: 16px;
+  }
+
+  .gallery {
+    grid-template-columns: 1fr;
   }
 }
