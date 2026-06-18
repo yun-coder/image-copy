@@ -18,6 +18,20 @@ const hoverTrigger = document.createElement("button");
 hoverTrigger.id = "pg-hover-trigger";
 hoverTrigger.type = "button";
 hoverTrigger.title = "分析图片并生成提示词";
+hoverTrigger.innerHTML = `
+  <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" width="18" height="18">
+    <!-- Mini frame -->
+    <rect x="15" y="18" width="70" height="60" rx="8" stroke="rgba(255,255,255,0.85)" stroke-width="3"/>
+    <!-- Mini mountain -->
+    <path d="M15 58 L35 36 L48 48 L62 32 L85 52 L85 78 L15 78 Z" fill="rgba(109,124,255,0.45)"/>
+    <path d="M15 64 L38 46 L50 56 L65 42 L85 56 L85 78 L15 78 Z" fill="rgba(45,212,255,0.3)"/>
+    <!-- Mini sun -->
+    <circle cx="66" cy="38" r="6" fill="rgba(165,180,255,0.55)"/>
+    <!-- Sparkle top-right -->
+    <path d="M82 22 Q82 28 88 28 Q82 28 82 34 Q82 28 76 28 Q82 28 82 22Z" fill="rgba(255,255,255,0.9)"/>
+    <!-- Sparkle top-left -->
+    <path d="M18 28 Q18 32 22 32 Q18 32 18 36 Q18 32 14 32 Q18 32 18 28Z" fill="rgba(255,255,255,0.7)" transform="scale(0.7) translate(8,12)"/>
+  </svg>`;
 
 const panel = document.createElement("aside");
 panel.id = "pg-panel";
