@@ -35,8 +35,17 @@
 
         <form id="settings-form" class="card-body">
           <label class="field">
+            <span>识图服务商</span>
+            <select name="promptProvider">
+              <option value="gemini">Gemini</option>
+              <option value="openai-compatible">OpenAI Compatible</option>
+              <option value="minimax">MiniMax</option>
+            </select>
+          </label>
+
+          <label class="field">
             <span>识别图片模型</span>
-            <input name="promptModel" type="text" placeholder="gemini-3.1-pro-preview" />
+            <input name="promptModel" type="text" placeholder="gemini-2.5-flash" />
           </label>
 
           <label class="field">
@@ -78,8 +87,17 @@
 
           <div id="image-settings-group" class="field-stack is-hidden">
             <label class="field">
+              <span>生图服务商</span>
+              <select name="imageProvider">
+                <option value="gemini">Gemini</option>
+                <option value="openai-compatible">OpenAI Compatible</option>
+                <option value="minimax">MiniMax</option>
+              </select>
+            </label>
+
+            <label class="field">
               <span>生图模型</span>
-              <input name="imageModel" type="text" placeholder="gemini-3.1-flash-image-preview" />
+              <input name="imageModel" type="text" placeholder="gemini-2.0-flash-exp-image-generation" />
             </label>
 
             <label class="field">

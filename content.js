@@ -301,7 +301,26 @@ async function openPanelForImage(image) {
   panel.classList.add("pg-open");
 
   const imageUrl = image.currentSrc || image.src;
+  
+  // 修复：添加图片加载错误处理
+  els.previewImage.onerror = () => {
+    // 图片加载失败时，尝试使用canvas截图作为备用方案
+    try {
+      const canvas = document.createElement("canvas");
+      canvas.width = image.naturalWidth || image.width || 100;
+      canvas.height = image.naturalHeight || image.height || 100;
+      const ctx = canvas.getContext("2d");
+      ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
+      els.previewImage.src = canvas.toDataURL("image/png");
+      els.previewImage.onerror = null; // 清除错误处理，避免循环
+    } catch (e) {
+      // 如果canvas也失败，显示占位图
+      els.previewImage.src = "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIGZpbGw9IiMxZTI5M2IiLz48dGV4dCB4PSIzMCIgeT0iMzUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxMiIgZmlsbD0iIzZiNzI4MCIgdGV4dC1hbmNob3I9Im1pZGRsZSI+5rip54mNPC90ZXh0Pjwvc3ZnPg==";
+      els.previewImage.onerror = null;
+    }
+  };
   els.previewImage.src = imageUrl;
+  
   els.imageTitle.textContent = image.alt?.trim() || "网页图片";
   els.imageUrl.textContent = truncateMiddle(imageUrl, 52);
   state.currentJob = null;

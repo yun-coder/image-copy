@@ -50,7 +50,7 @@
 
 - `Gemini`
   - Base URL: `https://generativelanguage.googleapis.com/v1beta`
-  - 模型: `gemini-3.1-pro-preview`
+  - 模型: `gemini-2.5-flash`
 - `OpenAI Compatible`
   - Base URL: `https://api.openai.com/v1`
   - 模型: `gpt-5.5`
@@ -59,7 +59,7 @@
 
 - `Gemini`
   - Base URL: `https://generativelanguage.googleapis.com/v1beta`
-  - 模型: `gemini-3.1-flash-image-preview`
+  - 模型: `gemini-2.0-flash-exp-image-generation`
 - `OpenAI Compatible`
   - Base URL: `https://api.openai.com/v1`
   - 模型: `gpt-image-2`

@@ -48,8 +48,8 @@ form.addEventListener("submit", async (event) => {
   updateImageDraftFromForm();
 
   const payload = {
-    promptProvider: currentSettings?.promptProvider || "gemini",
-    imageProvider: currentSettings?.imageProvider || "gemini",
+    promptProvider: getField("promptProvider")?.value || currentSettings?.promptProvider || "gemini",
+    imageProvider: getField("imageProvider")?.value || currentSettings?.imageProvider || "gemini",
     apiMode: "direct",
     promptApiKey: getField("promptApiKey")?.value || "",
     promptModel: getField("promptModel")?.value || "",
@@ -78,6 +78,18 @@ form.addEventListener("submit", async (event) => {
 });
 
 imageGenerationEnabledField?.addEventListener("change", syncImageSettingsVisibility);
+
+// Add provider change listeners
+const promptProviderField = getField("promptProvider");
+const imageProviderField = getField("imageProvider");
+
+promptProviderField?.addEventListener("change", () => {
+  syncPromptProviderUI(promptProviderField.value);
+});
+
+imageProviderField?.addEventListener("change", () => {
+  syncImageProviderUI(imageProviderField.value);
+});
 
 docButton.addEventListener("click", () => {
   const provider = currentSettings?.promptProvider || "gemini";
@@ -113,6 +125,7 @@ function hydrateForm(settings) {
 function hydratePromptFields(provider, source) {
   const merged = normalizePromptProfile(provider, source);
 
+  setSelectValue("promptProvider", provider);
   setFieldValue("promptApiKey", merged.apiKey);
   setFieldValue("promptModel", merged.model);
   setFieldValue("promptBaseUrl", merged.baseUrl);
@@ -123,6 +136,7 @@ function hydratePromptFields(provider, source) {
 function hydrateImageFields(provider, source) {
   const merged = normalizeImageProfile(provider, source);
 
+  setSelectValue("imageProvider", provider);
   setCheckboxValue("imageGenerationEnabled", merged.imageGenerationEnabled);
   setFieldValue("imageApiKey", merged.apiKey);
   setFieldValue("imageModel", merged.model);
@@ -153,19 +167,24 @@ function updateImageDraftFromForm(provider = currentSettings?.imageProvider || "
 
 function syncPromptProviderUI(provider) {
   const isOpenAICompatible = provider === "openai-compatible";
+  const isMinimax = provider === "minimax";
   const promptModelField = getField("promptModel");
   const promptBaseUrlField = getField("promptBaseUrl");
 
   if (promptModelField) {
-    promptModelField.placeholder = isOpenAICompatible ? "gpt-5.5" : "gemini-3.1-pro-preview";
+    promptModelField.placeholder = isMinimax ? "MiniMax-Text-01"
+      : isOpenAICompatible ? "gpt-4.1-mini"
+      : "gemini-2.5-flash";
   }
   if (promptBaseUrlField) {
-    promptBaseUrlField.placeholder = isOpenAICompatible
-      ? "https://api.openai.com/v1"
+    promptBaseUrlField.placeholder = isMinimax ? "https://api.minimax.chat/v1"
+      : isOpenAICompatible ? "https://api.openai.com/v1"
       : "https://generativelanguage.googleapis.com/v1beta";
   }
   if (promptBaseUrlHelp) {
-    promptBaseUrlHelp.textContent = isOpenAICompatible
+    promptBaseUrlHelp.textContent = isMinimax
+      ? "MiniMax 使用 OpenAI 兼容接口，默认地址 https://api.minimax.chat/v1"
+      : isOpenAICompatible
       ? "OpenAI Compatible 默认带入 https://api.openai.com/v1，也可以改成其他兼容网关。"
       : "Gemini 默认使用 Google 官方 REST 地址。";
   }
@@ -173,25 +192,30 @@ function syncPromptProviderUI(provider) {
 
 function syncImageProviderUI(provider) {
   const isOpenAICompatible = provider === "openai-compatible";
+  const isMinimax = provider === "minimax";
   const imageModelField = getField("imageModel");
   const imageBaseUrlField = getField("imageBaseUrl");
   const imageEndpointFieldEl = document.getElementById("image-endpoint-group");
 
   if (imageModelField) {
-    imageModelField.placeholder = isOpenAICompatible ? "gpt-image-2" : "gemini-3.1-flash-image-preview";
+    imageModelField.placeholder = isMinimax ? "MiniMax-Image-01"
+      : isOpenAICompatible ? "gpt-image-2"
+      : "gemini-2.0-flash-exp-image-generation";
   }
   if (imageBaseUrlField) {
-    imageBaseUrlField.placeholder = isOpenAICompatible
-      ? "https://api.openai.com/v1"
+    imageBaseUrlField.placeholder = isMinimax ? "https://api.minimax.chat/v1"
+      : isOpenAICompatible ? "https://api.openai.com/v1"
       : "https://generativelanguage.googleapis.com/v1beta";
   }
   if (imageBaseUrlHelp) {
-    imageBaseUrlHelp.textContent = isOpenAICompatible
+    imageBaseUrlHelp.textContent = isMinimax
+      ? "MiniMax 使用 OpenAI 兼容接口，默认地址 https://api.minimax.chat/v1"
+      : isOpenAICompatible
       ? "OpenAI Compatible 默认带入 https://api.openai.com/v1，也可以改成其他兼容网关。"
       : "Gemini 默认使用 Google 官方 REST 地址。";
   }
   if (imageEndpointFieldEl) {
-    imageEndpointFieldEl.style.display = isOpenAICompatible ? "" : "none";
+    imageEndpointFieldEl.style.display = (isOpenAICompatible || isMinimax) ? "" : "none";
   }
 }
 
@@ -203,6 +227,11 @@ function setFieldValue(name, value) {
 function setCheckboxValue(name, value) {
   const field = getField(name);
   if (field) field.checked = Boolean(value);
+}
+
+function setSelectValue(name, value) {
+  const field = getField(name);
+  if (field) field.value = value ?? "";
 }
 
 function getField(name) {

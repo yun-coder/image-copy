@@ -4,18 +4,19 @@ const DEFAULT_SETTINGS = {
   imageProvider: "gemini",
   apiMode: "direct",
   promptApiKey: "",
-  promptModel: "gemini-3.1-pro-preview",
+  promptModel: "gemini-2.5-flash",
   promptBaseUrl: "https://generativelanguage.googleapis.com/v1beta",
   imageGenerationEnabled: true,
   imageApiKey: "",
-  imageModel: "gemini-3.1-flash-image-preview",
+  imageModel: "gemini-2.0-flash-exp-image-generation",
   imageBaseUrl: "https://generativelanguage.googleapis.com/v1beta",
   imageEndpointPath: "",
   geminiBaseUrl: "https://generativelanguage.googleapis.com/v1beta",
   openaiBaseUrl: "https://api.openai.com/v1",
+  minimaxBaseUrl: "https://api.minimax.chat/v1",
   geminiApiKey: "",
-  geminiTextModel: "gemini-3.1-pro-preview",
-  geminiImageModel: "gemini-3.1-flash-image-preview",
+  geminiTextModel: "gemini-2.5-flash",
+  geminiImageModel: "gemini-2.0-flash-exp-image-generation",
   customProxyUrl: "",
   customProxyToken: "",
   autoAnalyze: true,
@@ -25,14 +26,17 @@ const DEFAULT_SETTINGS = {
   promptProviderProfiles: {},
   imageProviderProfiles: {}
 };
-const DEFAULT_PROMPT_MODEL = "gemini-3.1-pro-preview";
-const LEGACY_PROMPT_MODEL = "gemini-2.5-flash";
-const DEFAULT_IMAGE_MODEL = "gemini-3.1-flash-image-preview";
-const TEMP_IMAGE_MODEL = "imagen-4.0-generate-001";
+const DEFAULT_PROMPT_MODEL = "gemini-2.5-flash";
+const LEGACY_PROMPT_MODEL = "gemini-2.0-flash";
+const DEFAULT_IMAGE_MODEL = "gemini-2.0-flash-exp-image-generation";
+const TEMP_IMAGE_MODEL = "imagen-3.0-generate-002";
 const GEMINI_DEFAULT_BASE_URL = "https://generativelanguage.googleapis.com/v1beta";
 const OPENAI_DEFAULT_BASE_URL = "https://api.openai.com/v1";
 const OPENAI_DEFAULT_PROMPT_MODEL = "gpt-4.1-mini";
 const OPENAI_LATEST_IMAGE_MODEL = "gpt-image-2";
+const MINIMAX_DEFAULT_BASE_URL = "https://api.minimax.chat/v1";
+const MINIMAX_DEFAULT_PROMPT_MODEL = "MiniMax-Text-01";
+const MINIMAX_DEFAULT_IMAGE_MODEL = "MiniMax-Image-01";
 const OPENAI_IMAGE_SIZE_BY_RATIO = {
   "1:1": "1024x1024",
   "3:4": "1024x1536",
@@ -40,7 +44,7 @@ const OPENAI_IMAGE_SIZE_BY_RATIO = {
   "9:16": "1024x1792",
   "16:9": "1792x1024"
 };
-const SUPPORTED_PROVIDERS = ["gemini", "openai-compatible"];
+const SUPPORTED_PROVIDERS = ["gemini", "openai-compatible", "minimax"];
 
 const VIEWER_DB_NAME = "image-lens-db";
 const VIEWER_STORE_NAME = "viewer_payloads";
@@ -368,7 +372,7 @@ function repairActiveProviderProfiles(settings, promptProfiles, imageProfiles) {
       promptProfile.baseUrl = settings.geminiBaseUrl || GEMINI_DEFAULT_BASE_URL;
     }
     if (
-      settings.promptProvider === "openai-compatible" &&
+      (settings.promptProvider === "openai-compatible" || settings.promptProvider === "minimax") &&
       shouldResetOpenAIProfileBaseUrl(promptProfile)
     ) {
       promptProfile.baseUrl = settings.openaiBaseUrl || OPENAI_DEFAULT_BASE_URL;
@@ -386,14 +390,14 @@ function repairActiveProviderProfiles(settings, promptProfiles, imageProfiles) {
     if (!imageProfile.baseUrl && settings.imageBaseUrl) {
       imageProfile.baseUrl = settings.imageBaseUrl;
     }
-    if (!imageProfile.endpointPath && settings.imageProvider === "openai-compatible") {
+    if (!imageProfile.endpointPath && (settings.imageProvider === "openai-compatible" || settings.imageProvider === "minimax")) {
       imageProfile.endpointPath = "/images/generations";
     }
     if (settings.imageProvider === "gemini" && shouldResetGeminiProfileBaseUrl(imageProfile)) {
       imageProfile.baseUrl = settings.geminiBaseUrl || GEMINI_DEFAULT_BASE_URL;
     }
     if (
-      settings.imageProvider === "openai-compatible" &&
+      (settings.imageProvider === "openai-compatible" || settings.imageProvider === "minimax") &&
       shouldResetOpenAIProfileBaseUrl(imageProfile)
     ) {
       imageProfile.baseUrl = settings.openaiBaseUrl || OPENAI_DEFAULT_BASE_URL;
@@ -548,6 +552,7 @@ function getImageProviderDefaults(provider) {
 }
 
 function getProviderBaseUrl(provider) {
+  if (provider === "minimax") return MINIMAX_DEFAULT_BASE_URL;
   return provider === "openai-compatible" ? OPENAI_DEFAULT_BASE_URL : GEMINI_DEFAULT_BASE_URL;
 }
 
@@ -661,7 +666,7 @@ async function analyzeImage(payload, sender) {
   const prompt = buildAnalyzePrompt(payload);
 
   const rawText =
-    settings.promptProvider === "openai-compatible"
+    (settings.promptProvider === "openai-compatible" || settings.promptProvider === "minimax")
       ? await analyzeImageWithOpenAICompatible(settings, imagePart, prompt)
       : await analyzeImageWithGemini(settings, imagePart, prompt);
   const parsed = parseLooseJson(rawText);
@@ -716,7 +721,7 @@ async function generateImage(payload) {
   ensureImageApiKey(settings);
 
   const images =
-    settings.imageProvider === "openai-compatible"
+    (settings.imageProvider === "openai-compatible" || settings.imageProvider === "minimax")
       ? await generateImageWithOpenAICompatible(settings, payload, prompt)
       : await generateImageWithGemini(settings, payload, prompt);
 
