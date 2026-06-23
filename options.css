@@ -238,6 +238,21 @@ select {
   padding-right: 38px;
 }
 
+select option {
+  background: #1a1a2e;
+  color: #e0e0e0;
+  padding: 8px 12px;
+}
+
+select option:hover {
+  background: #2a2a4a;
+}
+
+select option:checked {
+  background: #3a3a5a;
+  color: #ffffff;
+}
+
 /* Toggle Switch */
 
 .toggle {

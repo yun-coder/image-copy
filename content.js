@@ -377,11 +377,13 @@ async function analyzeCurrentImage({ force }) {
 
     const cached = {
       title: result.title || "图片提示词",
+      imageType: result.imageType || "other",
       detail: state.panelData.detail || "full",
       language: state.panelData.language || "zh",
       aspectRatio: state.panelData.aspectRatio || state.settings?.aspectRatio || "1:1",
       structuredPrompt: result.structuredPrompt || null,
       analysis: result.analysis || null,
+      negative: result.negative || "",
       structureOpen: state.panelData.structureOpen || false,
       prompts: {
         short: {
@@ -416,11 +418,13 @@ function togglePromptLanguage() {
 function hydratePanelData(data) {
   state.panelData = {
     title: data.title || "图片提示词",
+    imageType: data.imageType || "other",
     detail: data.detail || "full",
     language: data.language || data.languageByDetail?.[data.detail || "full"] || "zh",
     aspectRatio: data.aspectRatio || state.settings?.aspectRatio || "1:1",
     structuredPrompt: data.structuredPrompt || null,
     analysis: data.analysis || null,
+    negative: data.negative || "",
     structureOpen: Boolean(data.structureOpen),
     prompts: {
       short: normalizePromptPair(data.prompts?.short),
@@ -543,12 +547,13 @@ function normalizeStructureLabel(label) {
   if (/^environment|环境/.test(normalized)) return "环境";
   if (/^material|材质/.test(normalized)) return "材质";
   if (/^composition|构图/.test(normalized)) return "构图";
+  if (/^color|色彩/.test(normalized)) return "色彩";
   if (/^rendering|渲染/.test(normalized)) return "渲染";
   return "";
 }
 
 function orderStructureEntries(entries) {
-  const labelOrder = ["主体", "风格", "光线", "镜头", "环境", "材质", "构图", "渲染"];
+  const labelOrder = ["主体", "风格", "光线", "镜头", "环境", "材质", "构图", "色彩", "渲染"];
   const entryMap = new Map();
 
   for (const entry of entries) {
@@ -567,12 +572,19 @@ function buildStructureEntriesFromAnalysis(analysis) {
 
   const rows = [
     ["主体", joinValues([analysis.subject?.main, ...(analysis.subject?.attributes || []), analysis.subject?.action])],
-    ["风格", joinValues([analysis.style?.medium, analysis.style?.genre, analysis.style?.mood, analysis.style?.referenceLook])],
+    ["风格", joinValues([analysis.style?.medium, analysis.style?.genre, analysis.style?.mood, analysis.style?.referenceLook, analysis.style?.era, analysis.style?.cultural, analysis.style?.technique])],
     ["光线", joinValues([analysis.lighting?.direction, analysis.lighting?.quality, analysis.lighting?.effect, analysis.lighting?.timeOfDay])],
     ["镜头", joinValues([analysis.camera?.focalLength, analysis.camera?.aperture, analysis.camera?.angle, analysis.camera?.shotType, analysis.camera?.depthOfField])],
     ["环境", joinValues([analysis.environment?.sceneType, analysis.environment?.backgroundMaterial, analysis.environment?.spatialRelation])],
     ["材质", joinValues([analysis.material?.surface, analysis.material?.microDetail, ...(analysis.material?.opticalProperties || [])])],
     ["构图", joinValues([analysis.composition?.layout, analysis.composition?.subjectPlacement, analysis.composition?.foreground, analysis.composition?.background, analysis.composition?.leadingLines, analysis.composition?.symmetry])],
+    ["色彩", joinValues([
+      ...(analysis.color?.dominantColors || []),
+      analysis.color?.colorHarmony,
+      analysis.color?.contrast && `对比度${analysis.color.contrast}`,
+      analysis.color?.saturation && `饱和度${analysis.color.saturation}`,
+      analysis.color?.temperature && `色温${analysis.color.temperature}`
+    ])],
     ["渲染", joinValues([analysis.rendering?.colorGrade, ...(analysis.rendering?.deviceLook || []), ...(analysis.rendering?.priorityTerms || [])])]
   ];
 
