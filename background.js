@@ -14,7 +14,6 @@ const DEFAULT_SETTINGS = {
   geminiBaseUrl: "https://generativelanguage.googleapis.com/v1beta",
   openaiBaseUrl: "https://api.openai.com/v1",
   minimaxBaseUrl: "https://api.minimax.chat/v1",
-  minimaxBaseUrl: "https://api.minimax.chat/v1",
   geminiApiKey: "",
   geminiTextModel: "gemini-2.5-flash",
   geminiImageModel: "gemini-2.0-flash-exp-image-generation",
@@ -197,24 +196,24 @@ async function saveSettings(payload) {
     ...current.promptProviderProfiles,
     [promptProvider]: sanitizePromptProviderProfile(promptProvider, {
       ...(current.promptProviderProfiles?.[promptProvider] || {}),
-      apiKey: sanitized.promptApiKey,
-      model: sanitized.promptModel,
-      baseUrl: sanitized.promptBaseUrl,
-      autoAnalyze: "autoAnalyze" in sanitized ? sanitized.autoAnalyze : current.autoAnalyze
+      apiKey: sanitized.promptApiKey || (current.promptProviderProfiles?.[promptProvider]?.apiKey || ""),
+      model: sanitized.promptModel || (current.promptProviderProfiles?.[promptProvider]?.model || ""),
+      baseUrl: sanitized.promptBaseUrl || (current.promptProviderProfiles?.[promptProvider]?.baseUrl || ""),
+      autoAnalyze: "autoAnalyze" in sanitized ? sanitized.autoAnalyze : (current.autoAnalyze ?? true)
     })
   };
   const imageProviderProfiles = {
     ...current.imageProviderProfiles,
     [imageProvider]: sanitizeImageProviderProfile(imageProvider, {
       ...(current.imageProviderProfiles?.[imageProvider] || {}),
-      apiKey: sanitized.imageApiKey,
-      model: sanitized.imageModel,
-      baseUrl: sanitized.imageBaseUrl,
-      endpointPath: sanitized.imageEndpointPath,
+      apiKey: sanitized.imageApiKey || (current.imageProviderProfiles?.[imageProvider]?.apiKey || ""),
+      model: sanitized.imageModel || (current.imageProviderProfiles?.[imageProvider]?.model || ""),
+      baseUrl: sanitized.imageBaseUrl || (current.imageProviderProfiles?.[imageProvider]?.baseUrl || ""),
+      endpointPath: sanitized.imageEndpointPath || (current.imageProviderProfiles?.[imageProvider]?.endpointPath || ""),
       imageGenerationEnabled:
         "imageGenerationEnabled" in sanitized
           ? sanitized.imageGenerationEnabled
-          : current.imageGenerationEnabled
+          : (current.imageGenerationEnabled ?? true)
     })
   };
   const providerProfiles = {
@@ -326,6 +325,21 @@ function buildProviderProfiles(settings) {
     "openai-compatible": sanitizeProviderProfile("openai-compatible", {
       ...openaiFallback,
       ...(storedProfiles["openai-compatible"] || {})
+    }),
+    minimax: sanitizeProviderProfile("minimax", {
+      ...(storedProfiles.minimax || {}),
+      apiMode: "direct",
+      promptApiKey: settings.minimaxApiKey || settings.promptApiKey || "",
+      promptModel: settings.minimaxTextModel || settings.promptModel || MINIMAX_DEFAULT_PROMPT_MODEL,
+      imageGenerationEnabled: settings.imageGenerationEnabled,
+      imageApiKey: settings.minimaxImageApiKey || settings.imageApiKey || "",
+      imageModel: settings.minimaxImageModel || settings.imageModel || MINIMAX_DEFAULT_IMAGE_MODEL,
+      geminiBaseUrl: GEMINI_DEFAULT_BASE_URL,
+      openaiBaseUrl: OPENAI_DEFAULT_BASE_URL,
+      minimaxBaseUrl: MINIMAX_DEFAULT_BASE_URL,
+      customProxyUrl: settings.customProxyUrl || "",
+      customProxyToken: settings.customProxyToken || "",
+      autoAnalyze: settings.autoAnalyze
     })
   };
 }
@@ -467,6 +481,7 @@ function pickProviderProfileFields(source) {
     imageModel: source?.imageModel,
     geminiBaseUrl: source?.geminiBaseUrl,
     openaiBaseUrl: source?.openaiBaseUrl,
+    minimaxBaseUrl: source?.minimaxBaseUrl,
     customProxyUrl: source?.customProxyUrl,
     customProxyToken: source?.customProxyToken,
     autoAnalyze: source?.autoAnalyze
@@ -511,26 +526,29 @@ function deriveLegacyImageProfile(settings, legacyProfile, provider) {
 
 function sanitizePromptProviderProfile(provider, input) {
   const defaults = getPromptProviderDefaults(provider);
-  const merged = { ...defaults, ...(isPlainObject(input) ? input : {}) };
+  const inputObj = isPlainObject(input) ? input : {};
 
   return {
-    apiKey: String(merged.apiKey || ""),
-    model: String(merged.model || defaults.model),
-    baseUrl: String(merged.baseUrl || defaults.baseUrl),
-    autoAnalyze: Boolean(merged.autoAnalyze)
+    apiKey: "apiKey" in inputObj ? String(inputObj.apiKey || "") : (defaults.apiKey || ""),
+    model: "model" in inputObj ? String(inputObj.model || defaults.model) : (defaults.model || ""),
+    baseUrl: "baseUrl" in inputObj ? String(inputObj.baseUrl || defaults.baseUrl) : (defaults.baseUrl || ""),
+    autoAnalyze: "autoAnalyze" in inputObj ? Boolean(inputObj.autoAnalyze) : defaults.autoAnalyze
   };
 }
 
 function sanitizeImageProviderProfile(provider, input) {
   const defaults = getImageProviderDefaults(provider);
-  const merged = { ...defaults, ...(isPlainObject(input) ? input : {}) };
+  const inputObj = isPlainObject(input) ? input : {};
 
   return {
-    apiKey: String(merged.apiKey || ""),
-    model: String(merged.model || defaults.model),
-    baseUrl: String(merged.baseUrl || defaults.baseUrl),
-    imageGenerationEnabled: Boolean(merged.imageGenerationEnabled),
-    endpointPath: String(merged.endpointPath || defaults.endpointPath)
+    apiKey: "apiKey" in inputObj ? String(inputObj.apiKey || "") : (defaults.apiKey || ""),
+    model: "model" in inputObj ? String(inputObj.model || defaults.model) : (defaults.model || ""),
+    baseUrl: "baseUrl" in inputObj ? String(inputObj.baseUrl || defaults.baseUrl) : (defaults.baseUrl || ""),
+    imageGenerationEnabled:
+      "imageGenerationEnabled" in inputObj
+        ? Boolean(inputObj.imageGenerationEnabled)
+        : defaults.imageGenerationEnabled,
+    endpointPath: "endpointPath" in inputObj ? String(inputObj.endpointPath || defaults.endpointPath) : (defaults.endpointPath || "")
   };
 }
 
@@ -561,6 +579,9 @@ function getProviderBaseUrl(provider) {
 function getLegacyProfileBaseUrl(legacyProfile, provider) {
   if (provider === "openai-compatible") {
     return String(legacyProfile?.openaiBaseUrl || OPENAI_DEFAULT_BASE_URL);
+  }
+  if (provider === "minimax") {
+    return String(legacyProfile?.minimaxBaseUrl || MINIMAX_DEFAULT_BASE_URL);
   }
   return String(legacyProfile?.geminiBaseUrl || GEMINI_DEFAULT_BASE_URL);
 }
@@ -596,6 +617,7 @@ function sanitizeProviderProfile(provider, input) {
     imageModel: String(merged.imageModel || defaults.imageModel),
     geminiBaseUrl: String(merged.geminiBaseUrl || defaults.geminiBaseUrl),
     openaiBaseUrl: String(merged.openaiBaseUrl || defaults.openaiBaseUrl),
+    minimaxBaseUrl: String(merged.minimaxBaseUrl || defaults.minimaxBaseUrl),
     customProxyUrl: String(merged.customProxyUrl || ""),
     customProxyToken: String(merged.customProxyToken || ""),
     autoAnalyze: Boolean(merged.autoAnalyze)
@@ -628,6 +650,7 @@ function getProviderDefaults(provider) {
     imageModel: DEFAULT_IMAGE_MODEL,
     geminiBaseUrl: GEMINI_DEFAULT_BASE_URL,
     openaiBaseUrl: OPENAI_DEFAULT_BASE_URL,
+    minimaxBaseUrl: MINIMAX_DEFAULT_BASE_URL,
     customProxyUrl: "",
     customProxyToken: "",
     autoAnalyze: true
