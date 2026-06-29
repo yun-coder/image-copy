@@ -44,7 +44,10 @@ const OPENAI_IMAGE_SIZE_BY_RATIO = {
   "9:16": "1024x1792",
   "16:9": "1792x1024"
 };
-const SUPPORTED_PROVIDERS = ["gemini", "openai-compatible", "minimax"];
+const AGNES_DEFAULT_BASE_URL = "https://api.agnes-ai.com/v1";
+const AGNES_DEFAULT_PROMPT_MODEL = "Agnes-1";
+const AGNES_DEFAULT_IMAGE_MODEL = "Agnes-Image-1";
+const SUPPORTED_PROVIDERS = ["gemini", "openai-compatible", "minimax", "agnes"];
 
 const VIEWER_DB_NAME = "image-lens-db";
 const VIEWER_STORE_NAME = "viewer_payloads";
@@ -340,6 +343,21 @@ function buildProviderProfiles(settings) {
       customProxyUrl: settings.customProxyUrl || "",
       customProxyToken: settings.customProxyToken || "",
       autoAnalyze: settings.autoAnalyze
+    }),
+    agnes: sanitizeProviderProfile("agnes", {
+      ...(storedProfiles.agnes || {}),
+      apiMode: "direct",
+      promptApiKey: settings.agnesApiKey || settings.promptApiKey || "",
+      promptModel: settings.agnesTextModel || settings.promptModel || AGNES_DEFAULT_PROMPT_MODEL,
+      imageGenerationEnabled: settings.imageGenerationEnabled,
+      imageApiKey: settings.agnesImageApiKey || settings.imageApiKey || "",
+      imageModel: settings.agnesImageModel || settings.imageModel || AGNES_DEFAULT_IMAGE_MODEL,
+      geminiBaseUrl: GEMINI_DEFAULT_BASE_URL,
+      openaiBaseUrl: OPENAI_DEFAULT_BASE_URL,
+      agnesBaseUrl: AGNES_DEFAULT_BASE_URL,
+      customProxyUrl: settings.customProxyUrl || "",
+      customProxyToken: settings.customProxyToken || "",
+      autoAnalyze: settings.autoAnalyze
     })
   };
 }
@@ -388,7 +406,7 @@ function repairActiveProviderProfiles(settings, promptProfiles, imageProfiles) {
       promptProfile.baseUrl = settings.geminiBaseUrl || GEMINI_DEFAULT_BASE_URL;
     }
     if (
-      (settings.promptProvider === "openai-compatible" || settings.promptProvider === "minimax") &&
+      (settings.promptProvider === "openai-compatible" || settings.promptProvider === "minimax" || settings.promptProvider === "agnes") &&
       shouldResetOpenAIProfileBaseUrl(promptProfile)
     ) {
       promptProfile.baseUrl = settings.openaiBaseUrl || OPENAI_DEFAULT_BASE_URL;
@@ -406,14 +424,14 @@ function repairActiveProviderProfiles(settings, promptProfiles, imageProfiles) {
     if (!imageProfile.baseUrl && settings.imageBaseUrl) {
       imageProfile.baseUrl = settings.imageBaseUrl;
     }
-    if (!imageProfile.endpointPath && (settings.imageProvider === "openai-compatible" || settings.imageProvider === "minimax")) {
+    if (!imageProfile.endpointPath && (settings.imageProvider === "openai-compatible" || settings.imageProvider === "minimax" || settings.imageProvider === "agnes")) {
       imageProfile.endpointPath = "/images/generations";
     }
     if (settings.imageProvider === "gemini" && shouldResetGeminiProfileBaseUrl(imageProfile)) {
       imageProfile.baseUrl = settings.geminiBaseUrl || GEMINI_DEFAULT_BASE_URL;
     }
     if (
-      (settings.imageProvider === "openai-compatible" || settings.imageProvider === "minimax") &&
+      (settings.imageProvider === "openai-compatible" || settings.imageProvider === "minimax" || settings.imageProvider === "agnes") &&
       shouldResetOpenAIProfileBaseUrl(imageProfile)
     ) {
       imageProfile.baseUrl = settings.openaiBaseUrl || OPENAI_DEFAULT_BASE_URL;
@@ -482,6 +500,7 @@ function pickProviderProfileFields(source) {
     geminiBaseUrl: source?.geminiBaseUrl,
     openaiBaseUrl: source?.openaiBaseUrl,
     minimaxBaseUrl: source?.minimaxBaseUrl,
+    agnesBaseUrl: source?.agnesBaseUrl,
     customProxyUrl: source?.customProxyUrl,
     customProxyToken: source?.customProxyToken,
     autoAnalyze: source?.autoAnalyze
@@ -573,6 +592,7 @@ function getImageProviderDefaults(provider) {
 
 function getProviderBaseUrl(provider) {
   if (provider === "minimax") return MINIMAX_DEFAULT_BASE_URL;
+  if (provider === "agnes") return AGNES_DEFAULT_BASE_URL;
   return provider === "openai-compatible" ? OPENAI_DEFAULT_BASE_URL : GEMINI_DEFAULT_BASE_URL;
 }
 
@@ -582,6 +602,9 @@ function getLegacyProfileBaseUrl(legacyProfile, provider) {
   }
   if (provider === "minimax") {
     return String(legacyProfile?.minimaxBaseUrl || MINIMAX_DEFAULT_BASE_URL);
+  }
+  if (provider === "agnes") {
+    return String(legacyProfile?.agnesBaseUrl || AGNES_DEFAULT_BASE_URL);
   }
   return String(legacyProfile?.geminiBaseUrl || GEMINI_DEFAULT_BASE_URL);
 }
@@ -618,6 +641,7 @@ function sanitizeProviderProfile(provider, input) {
     geminiBaseUrl: String(merged.geminiBaseUrl || defaults.geminiBaseUrl),
     openaiBaseUrl: String(merged.openaiBaseUrl || defaults.openaiBaseUrl),
     minimaxBaseUrl: String(merged.minimaxBaseUrl || defaults.minimaxBaseUrl),
+    agnesBaseUrl: String(merged.agnesBaseUrl || defaults.agnesBaseUrl),
     customProxyUrl: String(merged.customProxyUrl || ""),
     customProxyToken: String(merged.customProxyToken || ""),
     autoAnalyze: Boolean(merged.autoAnalyze)
@@ -635,6 +659,40 @@ function getProviderDefaults(provider) {
       imageModel: OPENAI_LATEST_IMAGE_MODEL,
       geminiBaseUrl: GEMINI_DEFAULT_BASE_URL,
       openaiBaseUrl: OPENAI_DEFAULT_BASE_URL,
+      customProxyUrl: "",
+      customProxyToken: "",
+      autoAnalyze: true
+    };
+  }
+
+  if (provider === "minimax") {
+    return {
+      apiMode: "direct",
+      promptApiKey: "",
+      promptModel: MINIMAX_DEFAULT_PROMPT_MODEL,
+      imageGenerationEnabled: true,
+      imageApiKey: "",
+      imageModel: MINIMAX_DEFAULT_IMAGE_MODEL,
+      geminiBaseUrl: GEMINI_DEFAULT_BASE_URL,
+      openaiBaseUrl: OPENAI_DEFAULT_BASE_URL,
+      minimaxBaseUrl: MINIMAX_DEFAULT_BASE_URL,
+      customProxyUrl: "",
+      customProxyToken: "",
+      autoAnalyze: true
+    };
+  }
+
+  if (provider === "agnes") {
+    return {
+      apiMode: "direct",
+      promptApiKey: "",
+      promptModel: AGNES_DEFAULT_PROMPT_MODEL,
+      imageGenerationEnabled: true,
+      imageApiKey: "",
+      imageModel: AGNES_DEFAULT_IMAGE_MODEL,
+      geminiBaseUrl: GEMINI_DEFAULT_BASE_URL,
+      openaiBaseUrl: OPENAI_DEFAULT_BASE_URL,
+      agnesBaseUrl: AGNES_DEFAULT_BASE_URL,
       customProxyUrl: "",
       customProxyToken: "",
       autoAnalyze: true
@@ -691,7 +749,7 @@ async function analyzeImage(payload, sender) {
   const prompt = buildAnalyzePrompt(payload);
 
   const rawText =
-    (settings.promptProvider === "openai-compatible" || settings.promptProvider === "minimax")
+    (settings.promptProvider === "openai-compatible" || settings.promptProvider === "minimax" || settings.promptProvider === "agnes")
       ? await analyzeImageWithOpenAICompatible(settings, imagePart, prompt)
       : await analyzeImageWithGemini(settings, imagePart, prompt);
   const parsed = parseLooseJson(rawText);
@@ -748,7 +806,7 @@ async function generateImage(payload) {
   ensureImageApiKey(settings);
 
   const images =
-    (settings.imageProvider === "openai-compatible" || settings.imageProvider === "minimax")
+    (settings.imageProvider === "openai-compatible" || settings.imageProvider === "minimax" || settings.imageProvider === "agnes")
       ? await generateImageWithOpenAICompatible(settings, payload, prompt)
       : await generateImageWithGemini(settings, payload, prompt);
 

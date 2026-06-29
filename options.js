@@ -8,7 +8,8 @@ const imageBaseUrlHelp = document.getElementById("image-base-url-help");
 
 const PROVIDER_DOCS = {
   gemini: "https://ai.google.dev/gemini-api/docs/image-generation",
-  "openai-compatible": "https://developers.openai.com/api/docs"
+  "openai-compatible": "https://developers.openai.com/api/docs",
+  agnes: "https://docs.agnes-ai.com"
 };
 
 let currentSettings = null;
@@ -168,22 +169,27 @@ function updateImageDraftFromForm(provider = currentSettings?.imageProvider || "
 function syncPromptProviderUI(provider) {
   const isOpenAICompatible = provider === "openai-compatible";
   const isMinimax = provider === "minimax";
+  const isAgnes = provider === "agnes";
   const promptModelField = getField("promptModel");
   const promptBaseUrlField = getField("promptBaseUrl");
 
   if (promptModelField) {
     promptModelField.placeholder = isMinimax ? "MiniMax-Text-01"
+      : isAgnes ? "Agnes-1"
       : isOpenAICompatible ? "gpt-4.1-mini"
       : "gemini-2.5-flash";
   }
   if (promptBaseUrlField) {
     promptBaseUrlField.placeholder = isMinimax ? "https://api.minimax.chat/v1"
+      : isAgnes ? "https://api.agnes-ai.com/v1"
       : isOpenAICompatible ? "https://api.openai.com/v1"
       : "https://generativelanguage.googleapis.com/v1beta";
   }
   if (promptBaseUrlHelp) {
     promptBaseUrlHelp.textContent = isMinimax
       ? "MiniMax 使用 OpenAI 兼容接口，默认地址 https://api.minimax.chat/v1"
+      : isAgnes
+      ? "Agnes 使用 OpenAI 兼容接口，默认地址 https://api.agnes-ai.com/v1"
       : isOpenAICompatible
       ? "OpenAI Compatible 默认带入 https://api.openai.com/v1，也可以改成其他兼容网关。"
       : "Gemini 默认使用 Google 官方 REST 地址。";
@@ -193,29 +199,34 @@ function syncPromptProviderUI(provider) {
 function syncImageProviderUI(provider) {
   const isOpenAICompatible = provider === "openai-compatible";
   const isMinimax = provider === "minimax";
+  const isAgnes = provider === "agnes";
   const imageModelField = getField("imageModel");
   const imageBaseUrlField = getField("imageBaseUrl");
   const imageEndpointFieldEl = document.getElementById("image-endpoint-group");
 
   if (imageModelField) {
     imageModelField.placeholder = isMinimax ? "MiniMax-Image-01"
+      : isAgnes ? "Agnes-Image-1"
       : isOpenAICompatible ? "gpt-image-2"
       : "gemini-2.0-flash-exp-image-generation";
   }
   if (imageBaseUrlField) {
     imageBaseUrlField.placeholder = isMinimax ? "https://api.minimax.chat/v1"
+      : isAgnes ? "https://api.agnes-ai.com/v1"
       : isOpenAICompatible ? "https://api.openai.com/v1"
       : "https://generativelanguage.googleapis.com/v1beta";
   }
   if (imageBaseUrlHelp) {
     imageBaseUrlHelp.textContent = isMinimax
       ? "MiniMax 使用 OpenAI 兼容接口，默认地址 https://api.minimax.chat/v1"
+      : isAgnes
+      ? "Agnes 使用 OpenAI 兼容接口，默认地址 https://api.agnes-ai.com/v1"
       : isOpenAICompatible
       ? "OpenAI Compatible 默认带入 https://api.openai.com/v1，也可以改成其他兼容网关。"
       : "Gemini 默认使用 Google 官方 REST 地址。";
   }
   if (imageEndpointFieldEl) {
-    imageEndpointFieldEl.style.display = (isOpenAICompatible || isMinimax) ? "" : "none";
+    imageEndpointFieldEl.style.display = (isOpenAICompatible || isMinimax || isAgnes) ? "" : "none";
   }
 }
 
@@ -258,6 +269,15 @@ function getPromptProviderDefaults(provider) {
     };
   }
 
+  if (provider === "agnes") {
+    return {
+      apiKey: "",
+      model: "Agnes-1",
+      baseUrl: "https://api.agnes-ai.com/v1",
+      autoAnalyze: true
+    };
+  }
+
   return {
     apiKey: "",
     model: "gemini-3.1-pro-preview",
@@ -273,6 +293,16 @@ function getImageProviderDefaults(provider) {
       apiKey: "",
       model: "gpt-image-2",
       baseUrl: "https://api.openai.com/v1",
+      endpointPath: "/images/generations"
+    };
+  }
+
+  if (provider === "agnes") {
+    return {
+      imageGenerationEnabled: true,
+      apiKey: "",
+      model: "Agnes-Image-1",
+      baseUrl: "https://api.agnes-ai.com/v1",
       endpointPath: "/images/generations"
     };
   }
