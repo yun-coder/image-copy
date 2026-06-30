@@ -867,10 +867,16 @@ async function analyzeImageWithGemini(settings, imagePart, prompt) {
 }
 
 async function analyzeImageWithOpenAICompatible(settings, imagePart, prompt) {
+  let model;
+  if (settings.promptProvider === "agnes") {
+    model = settings.promptModel || AGNES_DEFAULT_PROMPT_MODEL;
+  } else {
+    model = settings.promptModel || OPENAI_DEFAULT_PROMPT_MODEL;
+  }
   const response = await callOpenAICompatibleChatCompletion({
     baseUrl: settings.promptBaseUrl,
     apiKey: settings.promptApiKey,
-    model: settings.promptModel || OPENAI_DEFAULT_PROMPT_MODEL,
+    model: model,
     messages: [
       {
         role: "user",
@@ -914,13 +920,19 @@ async function generateImageWithGemini(settings, payload, prompt) {
 }
 
 async function generateImageWithOpenAICompatible(settings, payload, prompt) {
+  let model;
+  if (settings.imageProvider === "agnes") {
+    model = settings.imageModel || AGNES_DEFAULT_IMAGE_MODEL;
+  } else {
+    model = settings.imageModel || OPENAI_LATEST_IMAGE_MODEL;
+  }
   const size = mapAspectRatioToOpenAIImageSize(payload.aspectRatio || settings.aspectRatio || "1:1");
   const count = clampImageCount(payload.count || settings.imageCount || 1);
   const response = await callOpenAICompatibleImagesGenerate({
     baseUrl: settings.imageBaseUrl,
     apiKey: settings.imageApiKey,
     endpointPath: settings.imageEndpointPath,
-    model: settings.imageModel || OPENAI_LATEST_IMAGE_MODEL,
+    model: model,
     prompt,
     n: count,
     size
@@ -1085,8 +1097,13 @@ function extractImagesFromOpenAICompatible(data) {
   if (Array.isArray(data?.data)) {
     return data.data
       .map((item) => {
+        // Base64 image
         if (item?.b64_json) {
           return { mimeType: "image/png", base64Data: item.b64_json };
+        }
+        // URL-based image (Agnes returns url at item level)
+        if (item?.url && typeof item.url === "string") {
+          return { url: item.url };
         }
         return null;
       })
@@ -1173,23 +1190,32 @@ function parseLooseJson(rawText) {
     try {
       const partial = extractPartialJson(jsonText);
       if (partial) {
-        console.log("[图生灵] Repaired partial JSON, length:", partial.length);
         return JSON.parse(partial);
       }
     } catch (e) {
-      // Continue to throw original error
+      // Continue to next strategy
     }
 
-    // Log detailed error info for debugging
-    const errorPos = error.message.match(/position (\d+)/);
-    if (errorPos) {
-      const pos = parseInt(errorPos[1]);
-      const context = jsonText.slice(Math.max(0, pos - 50), pos + 50);
-      console.error("[图生灵] JSON parse error at position", pos, ":", error.message);
-      console.error("[图生灵] Context:", context);
-      console.error("[图生灵] JSON length:", jsonText.length);
+    // Strategy 4: Aggressive cleanup — strip everything after the last valid "}"
+    try {
+      const cleaned = aggressiveCleanJson(jsonText);
+      if (cleaned !== jsonText) {
+        return JSON.parse(cleaned);
+      }
+    } catch (e) {
+      // Continue to next strategy
     }
-    
+
+    // Strategy 5: Last resort — try to find any valid JSON object in the text
+    try {
+      const anyJson = extractAnyJsonObject(candidate);
+      if (anyJson) {
+        return JSON.parse(anyJson);
+      }
+    } catch (e) {
+      // Give up
+    }
+
     throw error;
   }
 }
@@ -1325,6 +1351,64 @@ function extractPartialJson(jsonText) {
   }
   
   return null;
+}
+
+// Strategy 4: Aggressive cleanup — strip trailing garbage after the last valid "}"
+function aggressiveCleanJson(jsonText) {
+  const source = String(jsonText || "");
+  // Find the last position where a valid JSON object could end
+  // by scanning for the last balanced "}"
+  let lastValidEnd = -1;
+  let depth = 0;
+  let inString = false;
+  let escaped = false;
+
+  for (let i = 0; i < source.length; i++) {
+    const ch = source[i];
+    if (escaped) { escaped = false; continue; }
+    if (ch === "\\") { escaped = inString; continue; }
+    if (ch === "\"") { inString = !inString; continue; }
+    if (inString) continue;
+    if (ch === "{") depth++;
+    if (ch === "}") {
+      depth--;
+      if (depth === 0) {
+        lastValidEnd = i;
+      }
+    }
+  }
+
+  if (lastValidEnd > 0) {
+    const trimmed = source.slice(0, lastValidEnd + 1);
+    // Also fix trailing comma before closing brace
+    const fixed = trimmed.replace(/,\s*}/g, "}");
+    return fixed;
+  }
+
+  return source;
+}
+
+// Strategy 5: Scan entire text for any valid JSON object
+function extractAnyJsonObject(text) {
+  const source = String(text || "");
+  let bestMatch = null;
+  let bestLen = 0;
+
+  for (let i = 0; i < source.length; i++) {
+    if (source[i] !== "{") continue;
+    const candidate = extractFirstJsonObject(source.slice(i));
+    if (candidate.length > bestLen) {
+      try {
+        JSON.parse(candidate);
+        bestMatch = candidate;
+        bestLen = candidate.length;
+      } catch (e) {
+        // not valid, try next
+      }
+    }
+  }
+
+  return bestMatch;
 }
 
 function extractFirstJsonObject(text) {
